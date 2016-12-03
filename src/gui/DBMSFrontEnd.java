@@ -50,7 +50,7 @@ public class DBMSFrontEnd extends Application{
 		infoSection.setLayoutY(130);
 		
 		queryingOptions = new VBox(20);
-		queryingOptions.setLayoutX(100);
+		queryingOptions.setLayoutX(50);
 		queryingOptions.setLayoutY(130);
 		
 		attributeInfo = new ArrayList<>();
@@ -87,7 +87,7 @@ public class DBMSFrontEnd extends Application{
 		
 		ObservableList<String> tableList = FXCollections.observableArrayList();
 		tableList.addAll("Phone", "Carrier", "Frame", "Platform", "Battery", "Color", "Memory", 
-				"Internal Storage", "Camera", "Video", "Display", "Launch Time");
+				"InternalStorage", "Camera", "Video", "Display", "Launch");
 		FXCollections.sort(tableList);
 		
 		ComboBox<String> chooseTable = new ComboBox<>(tableList);
@@ -126,8 +126,6 @@ public class DBMSFrontEnd extends Application{
 				addToQueryList.setOnAction(event->{
 					if(secondaryBox.getValue() != null){
 						addToQuery(chooseTable.getValue(), secondaryBox.getValue());
-						tableSelection.getChildren().remove(2);
-						tableSelection.getChildren().remove(1);
 					}
 				});
 				
@@ -173,11 +171,11 @@ public class DBMSFrontEnd extends Application{
 			}
 			FXCollections.sort(attributeList);
 			
-			ComboBox allPossibleAttributes = new ComboBox(attributeList);
+			ComboBox<String> allPossibleAttributes = new ComboBox<>(attributeList);
 			
 			ImageView showAttributeInfo = new ImageView(new Image("Transparent_QuestionMark.png"));
 			
-			Button remove = new Button("Remove Search Option");
+			Button remove = new Button("Remove Option");
 			
 			
 			attributeSelection.getChildren().addAll(allPossibleAttributes, showAttributeInfo, remove);
@@ -235,10 +233,10 @@ public class DBMSFrontEnd extends Application{
 		}
 		
 		String queryThis;
-		if(tableName.equals("Internal Storage")){
+		if(tableName.equals("InternalStorage")){
 			queryThis = "SELECT " + attribute + " FROM Memory_InternalStorage";
 		}
-		else if(tableName.equals("Launch Time")){
+		else if(tableName.equals("Launch")){
 			queryThis = "SELECT " + attribute + " FROM LaunchInformation";
 		}
 		else if(tableName.equals("Video")){

@@ -1,3 +1,90 @@
 New Attribute Information - Phone: Brand
-A phone brand is the name of the company
-who created the phone.
+A phone brand is the name of the company who created the phone.
+New Attribute Information - Phone: PhoneType
+A phone type is the type of design of the phone.
+New Attribute Information - Phone: Price
+A phone price is the cost of the phone.
+New Attribute Information - Battery: BatteryName
+A battery name is the name of the rechargable battery.
+New Attribute Information - Battery: ChargerType
+A charger type is the type of charging port that is installed 
+into the phone.
+New Attribute Information - Battery: MusicPlayingTime
+Music playing time determines how long the battery is able last 
+while music playing.
+New Attribute Information - Battery: StandByTime
+Music playing time determines how long the battery is able to last.
+New Attribute Information - Battery: TalkTime
+Music playing time determines how long the battery is able to last 
+while on-call.
+New Attribute Information - Camera: PictureFlash
+Picture flash determines the type of camera flash device that's 
+installed in the phone.
+New Attribute Information - Camera: PictureFocus
+Picture focus determines the type of camera focus device that's 
+installed in the phone.
+New Attribute Information - Camera: PictureMP
+Picture MP determines the amount of megapixels the phone camera has.
+New Attribute Information - Carrier: CarrierName
+A carrier name is the name of the carrier that carries the phone.
+New Attribute Information - Color: FrameColor
+A frame color is the color of the phone's display frame.
+New Attribute Information - Display: DisplayProtection
+Display protection determines if the phone has a display protection 
+pre-installed on the front screen.
+New Attribute Information - Display: DisplayResolution
+A display resolution refers to the clarity of the text and images 
+displayed on your screen.
+New Attribute Information - Display: DisplayType
+A display type is the type of display used in the phone. They can 
+be either color or monochrome.
+New Attribute Information - Display: DisplaySize
+A display size refers to the width, length, and height of the display 
+on the phone screen.
+New Attribute Information - Display: Multitouch
+MultiTouch determines whether or not the phone has the multitouch 
+function.
+New Attribute Information - Frame: Height
+The height of the phone's frame.
+New Attribute Information - Frame: Length
+The length of the phone's frame.
+New Attribute Information - Frame: Width
+The width of the phone's frame
+New Attribute Information - Frame: Weight
+This determines how much the phone's frame weighs.
+New Attribute Information - InternalStorage: InternalStorage
+Internal storage refers to the amount of hard drive space that 
+the phone has.
+New Attribute Information - Launch: AnnouncementMonth
+Announcement month is the month when the phone was revealed.
+New Attribute Information - Launch: AnnouncementYear
+Announcement month is the year when the phone was the revealed.
+New Attribute Information - Launch: ReleaseMonth
+Release month is the month when the phone was released into stores.
+New Attribute Information - Launch: ReleaseYear
+Release year is the month when the phone was released into stores.
+New Attribute Information - Memory: RAM
+Memory ram is a form of phone data storage that allows data items to 
+be read or written in almost the same amount of time irrespective of the 
+physical location of data inside the memory. 
+New Attribute Information - Memory: SDSlot
+SD Slot is a type of removable flash memory card used for storing 
+information. 
+New Attribute Information - Platform: CPU
+CPU is random access memory (RAM) that a phone microprocessor can access 
+more quickly than it can access regular RAM. 
+New Attribute Information - Platform: Chipset
+A Chipset is a set of electronic components in an phone's circuit boards 
+that manages the data flow between the processor, memory and peripherals. 
+New Attribute Information - Platform: GPU
+A phone GPU is a specialized circuit designed to accelerate the image 
+output in a frame buffer intended for output to a display.
+New Attribute Information - Platform: OS
+An OS (operating system) is a base infrastructure software component of a 
+computerized/phone system. 
+New Attribute Information - Video: VideoFPS
+A video FPS (frames per second) is the frequency rate at which an imaging
+device displays consecutive images called frames. 
+New Attribute Information - Video: VideoResolution
+A video resolution refers to the number of pixels on a display or in a 
+camera sensor.
