@@ -88,6 +88,7 @@ public class DBMSFrontEnd extends Application{
 		ObservableList<String> tableList = FXCollections.observableArrayList();
 		tableList.addAll("Phone", "Carrier", "Frame", "Platform", "Battery", "Color", "Memory", 
 				"Internal Storage", "Camera", "Video", "Display", "Launch Time");
+		FXCollections.sort(tableList);
 		
 		ComboBox<String> chooseTable = new ComboBox<>(tableList);
 		
@@ -117,6 +118,7 @@ public class DBMSFrontEnd extends Application{
 						chooseFrom.add(resmd.getColumnName(i));
 					}
 				}
+				FXCollections.sort(chooseFrom);
 				
 				ComboBox<String> secondaryBox = new ComboBox<>(chooseFrom);
 				
@@ -156,9 +158,21 @@ public class DBMSFrontEnd extends Application{
 			ObservableList<String> attributeList = FXCollections.observableArrayList();
 			while(res.next()){
 				if(res.getString(attribute) != null && !attributeList.contains(res.getString(attribute))){
-					attributeList.add(res.getString(attribute));
+					if(attribute.equals("Price")){
+						if((res.getString(attribute).indexOf(".")) == (res.getString(attribute).length() - 2)){
+								attributeList.add("$" + res.getString(attribute) + "0");
+						}
+						else{
+							attributeList.add("$" + res.getString(attribute));
+						}
+					}
+					else{
+						attributeList.add(res.getString(attribute));
+					}
 				}
 			}
+			FXCollections.sort(attributeList);
+			
 			ComboBox allPossibleAttributes = new ComboBox(attributeList);
 			
 			ImageView showAttributeInfo = new ImageView(new Image("Transparent_QuestionMark.png"));
@@ -187,7 +201,7 @@ public class DBMSFrontEnd extends Application{
 					for(int i = attributeInfo.indexOf("New Attribute Information - " + tableName + ": " + attribute) + 1; 
 							(i < attributeInfo.size()) && !(attributeInfo.get(i).contains("New Attribute Information")); 
 							i++){
-						attributeText = attributeText.concat(attributeInfo.get(i).concat("\n"));
+						attributeText = attributeText + attributeInfo.get(i) + "\n";
 					}
 					
 					infoSection.getChildren().addAll(title, new Text(attributeText));
