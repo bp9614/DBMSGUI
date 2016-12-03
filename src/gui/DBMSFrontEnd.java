@@ -17,6 +17,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 
@@ -32,7 +33,11 @@ public class DBMSFrontEnd extends Application{
 	public DBMSFrontEnd() throws SQLException{
 		pane = new Pane();
 		scene = new Scene(pane, 1200, 900);
-		queryingOptions = new VBox(15);
+		
+		queryingOptions = new VBox(20);
+		queryingOptions.setLayoutX(130);
+		queryingOptions.setLayoutY(130);
+		
 		connection = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
 	}
 	
@@ -55,43 +60,50 @@ public class DBMSFrontEnd extends Application{
 	}
 
 	public void queryingScreen(){
-		HBox chooseATable = new HBox(10);
-		chooseATable.setLayoutX(380);
-		chooseATable.setLayoutY(730);
+		pane.getChildren().add(queryingOptions);
 		
-		ObservableList<String> tableSelection = FXCollections.observableArrayList();
-		tableSelection.addAll("Phone", "Carrier", "Frame", "Platform", "Battery", "Color", "Memory", 
+		
+		ObservableList<String> tableList = FXCollections.observableArrayList();
+		tableList.addAll("Phone", "Carrier", "Frame", "Platform", "Battery", "Color", "Memory", 
 				"Internal Storage", "Camera", "Video", "Display", "Launch Time");
 		
+		ComboBox<String> chooseTable = new ComboBox<>(tableList);
 		
-		ComboBox<String> chooseQueries = new ComboBox<>(tableSelection);
 		
-		chooseATable.getChildren().add(chooseQueries);
-		pane.getChildren().add(chooseATable);
+		VBox tableSelectionAndTitle = new VBox(15);
 		
-		chooseQueries.setOnAction(e->{
+		Text tableSelectionTitle = new Text("Add options to search for:");
+		HBox tableSelection = new HBox(10);
+		tableSelection.getChildren().add(chooseTable);
+		
+		
+		tableSelectionAndTitle.getChildren().addAll(tableSelectionTitle, tableSelection);
+		queryingOptions.getChildren().add(tableSelectionAndTitle);
+		
+		
+		chooseTable.setOnAction(e->{
 			try {
-				if(chooseATable.getChildren().size() > 1){
-					chooseATable.getChildren().remove(2);
-					chooseATable.getChildren().remove(1);
+				if(tableSelection.getChildren().size() > 1){
+					tableSelection.getChildren().remove(2);
+					tableSelection.getChildren().remove(1);
 				}
 				
 				
 				String queryThis;
-				if(chooseQueries.getValue().equals("Internal Storage")){
+				if(chooseTable.getValue().equals("Internal Storage")){
 					queryThis = "SELECT * FROM Memory_InternalStorage";
 				}
-				else if(chooseQueries.getValue().equals("Launch Time")){
+				else if(chooseTable.getValue().equals("Launch Time")){
 					queryThis = "SELECT * FROM LaunchInformation";
 				}
-				else if(chooseQueries.getValue().equals("Video")){
+				else if(chooseTable.getValue().equals("Video")){
 					queryThis = "SELECT * FROM Camera_Video";
 				}
-				else if(chooseQueries.getValue().equals("Color")){
+				else if(chooseTable.getValue().equals("Color")){
 					queryThis = "SELECT * FROM Frame_Color";
 				}
 				else{
-					queryThis = "SELECT * FROM " + chooseQueries.getValue();
+					queryThis = "SELECT * FROM " + chooseTable.getValue();
 				}
 				
 				stmt = connection.prepareStatement(queryThis);
@@ -110,19 +122,54 @@ public class DBMSFrontEnd extends Application{
 				Button addToQueryList = new Button("Add");
 				addToQueryList.setOnAction(event->{
 					if(addToQueryList != null){
-						chooseATable.getChildren().remove(2);
-						chooseATable.getChildren().remove(1);
+						addToQuery(chooseTable.getValue(), secondaryBox.getValue());
+						tableSelection.getChildren().remove(2);
+						tableSelection.getChildren().remove(1);
 					}
 				});
 				
-				chooseATable.getChildren().addAll(secondaryBox, addToQueryList);
+				tableSelection.getChildren().addAll(secondaryBox, addToQueryList);
 				
 				stmt.clearBatch();
 			} catch (SQLException e1) {
 				System.out.println("Something happened... Not good though.");
 			}
 		});
-
+	}
+	
+	public void addToQuery(String tableName, String attribute){
+		VBox attributeSelectionAndTitle = new VBox(15);
+		
+		Text attributeSelectionTitle = new Text(attribute + "of a" + tableName);
+		HBox attributeSelection = new HBox(10);
+		
+		
+	}
+	
+	public ResultSet executeQuery(String tableName) throws SQLException{
+		String queryThis;
+		if(tableName.equals("Internal Storage")){
+			queryThis = "SELECT * FROM Memory_InternalStorage";
+		}
+		else if(tableName.equals("Launch Time")){
+			queryThis = "SELECT * FROM LaunchInformation";
+		}
+		else if(tableName.equals("Video")){
+			queryThis = "SELECT * FROM Camera_Video";
+		}
+		else if(tableName.equals("Color")){
+			queryThis = "SELECT * FROM Frame_Color";
+		}
+		else{
+			queryThis = "SELECT * FROM " + tableName;
+		}
+		
+		stmt = connection.prepareStatement(queryThis);
+		ResultSet res = stmt.executeQuery();
+		
+		stmt.clearBatch();
+		
+		return res;
 	}
 	
 	public static void main(String args[]){
