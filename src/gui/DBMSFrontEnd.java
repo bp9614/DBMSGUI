@@ -1,11 +1,15 @@
 package gui;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Scanner;
 
 import javafx.application.Application;
 import javafx.collections.FXCollections;
@@ -19,7 +23,10 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 
@@ -29,7 +36,8 @@ public class DBMSFrontEnd extends Application{
 	private PreparedStatement stmt;
 	private final Connection connection;
 	private VBox queryingOptions;
-	private Text infoSection;
+	private TextFlow infoSection;
+	private ArrayList<String> attributeInfo;
 	
 	private static final String DB_PATH = DBMSFrontEnd.class.getResource("PhoneDatabase.sqlite").toString();
 	
@@ -37,11 +45,16 @@ public class DBMSFrontEnd extends Application{
 		pane = new Pane();
 		scene = new Scene(pane, 1200, 900);
 		
-		infoSection = new Text(670, 130, "");
+		infoSection = new TextFlow();
+		infoSection.setLayoutX(670);
+		infoSection.setLayoutY(130);
 		
 		queryingOptions = new VBox(20);
 		queryingOptions.setLayoutX(100);
 		queryingOptions.setLayoutY(130);
+		
+		attributeInfo = new ArrayList<>();
+		storeAttributeInformation();
 		
 		connection = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
 	}
@@ -69,7 +82,7 @@ public class DBMSFrontEnd extends Application{
 		getResults.setLayoutX(535);
 		getResults.setLayoutY(760);
 		
-		pane.getChildren().addAll(getResults, queryingOptions);
+		pane.getChildren().addAll(getResults, queryingOptions, infoSection);
 		
 		
 		ObservableList<String> tableList = FXCollections.observableArrayList();
@@ -125,6 +138,7 @@ public class DBMSFrontEnd extends Application{
 		});
 		
 		getResults.setOnAction(e->{
+			infoSection.getChildren().clear();
 			queryingOptions.getChildren().clear();
 			pane.getChildren().clear();
 		});
@@ -141,18 +155,18 @@ public class DBMSFrontEnd extends Application{
 			ResultSet res = executeQuery(tableName, attribute);
 			ObservableList<String> attributeList = FXCollections.observableArrayList();
 			while(res.next()){
-				if(res.getString(attribute) != null){
+				if(res.getString(attribute) != null && !attributeList.contains(res.getString(attribute))){
 					attributeList.add(res.getString(attribute));
 				}
 			}
 			ComboBox allPossibleAttributes = new ComboBox(attributeList);
 			
-			ImageView getAttributeInformation = new ImageView(new Image("Transparent_QuestionMark.png"));
+			ImageView showAttributeInfo = new ImageView(new Image("Transparent_QuestionMark.png"));
 			
 			Button remove = new Button("Remove Search Option");
 			
 			
-			attributeSelection.getChildren().addAll(allPossibleAttributes, getAttributeInformation, remove);
+			attributeSelection.getChildren().addAll(allPossibleAttributes, showAttributeInfo, remove);
 			attributeSelectionAndTitle.getChildren().addAll(attributeSelectionTitle, attributeSelection);
 			queryingOptions.getChildren().add(attributeSelectionAndTitle);
 			
@@ -160,7 +174,42 @@ public class DBMSFrontEnd extends Application{
 			remove.setOnAction(e->{
 				queryingOptions.getChildren().remove(attributeSelectionAndTitle);
 			});
+			
+			showAttributeInfo.setOnMouseClicked(e->{
+				if(attributeInfo.contains("New Attribute Information - " + tableName + ": " + attribute)){
+					infoSection.getChildren().clear();
+					
+					Text title = new Text(attribute + "\n");
+					title.setFont(Font.font("", FontWeight.BOLD, 30));
+					title.setUnderline(true);
+					
+					String attributeText = "";
+					for(int i = attributeInfo.indexOf("New Attribute Information - " + tableName + ": " + attribute) + 1; 
+							(i < attributeInfo.size()) && !attributeInfo.get(i).contains("New Attribute Information"); i++){
+						attributeText = attributeText.concat(attributeInfo.get(i).concat("\n"));
+					}
+					
+					infoSection.getChildren().addAll(title, new Text(attributeText));
+				}
+				else{
+					System.out.println("No");
+				}
+			});
 		} catch (SQLException e1) {
+			System.out.println("Something went wrong...");
+		}
+	}
+	
+	public void storeAttributeInformation(){
+		try {
+			Scanner getAttributeInformation = new Scanner(new File("AttributeInformation.txt"));
+			
+			while(getAttributeInformation.hasNextLine()){
+				attributeInfo.add(getAttributeInformation.nextLine());
+			}
+			
+			getAttributeInformation.close();
+		} catch (FileNotFoundException e) {
 			System.out.println("Something went wrong...");
 		}
 	}

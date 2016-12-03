@@ -1,0 +1,3 @@
+New Attribute Information - Phone: Brand
+A phone brand is the name of the company
+who created the phone.
