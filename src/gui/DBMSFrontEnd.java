@@ -14,6 +14,8 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -38,14 +40,14 @@ public class DBMSFrontEnd extends Application{
 		infoSection = new Text(670, 130, "");
 		
 		queryingOptions = new VBox(20);
-		queryingOptions.setLayoutX(130);
+		queryingOptions.setLayoutX(100);
 		queryingOptions.setLayoutY(130);
 		
 		connection = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
 	}
 	
 	@Override
-	public void start(Stage primaryStage) throws SQLException{
+	public void start(Stage primaryStage){
 		queryingScreen();
 		
 		primaryStage.setTitle("Test");
@@ -121,15 +123,46 @@ public class DBMSFrontEnd extends Application{
 				System.out.println("Something happened... Not good though.");
 			}
 		});
+		
+		getResults.setOnAction(e->{
+			queryingOptions.getChildren().clear();
+			pane.getChildren().clear();
+		});
 	}
 	
-	public void addToQuery(String tableName, String attribute){
-		VBox attributeSelectionAndTitle = new VBox(15);
-		
-		Text attributeSelectionTitle = new Text(attribute + "of a" + tableName);
-		HBox attributeSelection = new HBox(10);
-		
-		
+	public void addToQuery(String tableName, String attribute) {		
+		try {
+			VBox attributeSelectionAndTitle = new VBox(15);
+			
+			Text attributeSelectionTitle = new Text(attribute + " of a phone");
+			HBox attributeSelection = new HBox(10);
+			
+			
+			ResultSet res = executeQuery(tableName, attribute);
+			ObservableList<String> attributeList = FXCollections.observableArrayList();
+			while(res.next()){
+				if(res.getString(attribute) != null){
+					attributeList.add(res.getString(attribute));
+				}
+			}
+			ComboBox allPossibleAttributes = new ComboBox(attributeList);
+			
+			ImageView getAttributeInformation = new ImageView(new Image("Transparent_QuestionMark.png"));
+			
+			Button remove = new Button("Remove Search Option");
+			
+			
+			attributeSelection.getChildren().addAll(allPossibleAttributes, getAttributeInformation, remove);
+			attributeSelectionAndTitle.getChildren().addAll(attributeSelectionTitle, attributeSelection);
+			queryingOptions.getChildren().add(attributeSelectionAndTitle);
+			
+			
+			remove.setOnAction(e->{
+				queryingOptions.getChildren().remove(attributeSelectionAndTitle);
+			});
+		} catch (SQLException e1) {
+			System.out.println("Something went wrong...");
+		}
 	}
 	
 	public ResultSet executeQuery(String tableName, String attribute) throws SQLException{
