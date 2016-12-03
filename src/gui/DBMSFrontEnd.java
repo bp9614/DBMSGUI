@@ -27,12 +27,15 @@ public class DBMSFrontEnd extends Application{
 	private PreparedStatement stmt;
 	private final Connection connection;
 	private VBox queryingOptions;
+	private Text infoSection;
 	
 	private static final String DB_PATH = DBMSFrontEnd.class.getResource("PhoneDatabase.sqlite").toString();
 	
 	public DBMSFrontEnd() throws SQLException{
 		pane = new Pane();
 		scene = new Scene(pane, 1200, 900);
+		
+		infoSection = new Text(670, 130, "");
 		
 		queryingOptions = new VBox(20);
 		queryingOptions.setLayoutX(130);
@@ -60,7 +63,11 @@ public class DBMSFrontEnd extends Application{
 	}
 
 	public void queryingScreen(){
-		pane.getChildren().add(queryingOptions);
+		Button getResults = new Button("Find Me A Phone");
+		getResults.setLayoutX(535);
+		getResults.setLayoutY(760);
+		
+		pane.getChildren().addAll(getResults, queryingOptions);
 		
 		
 		ObservableList<String> tableList = FXCollections.observableArrayList();
@@ -80,7 +87,6 @@ public class DBMSFrontEnd extends Application{
 		tableSelectionAndTitle.getChildren().addAll(tableSelectionTitle, tableSelection);
 		queryingOptions.getChildren().add(tableSelectionAndTitle);
 		
-		
 		chooseTable.setOnAction(e->{
 			try {
 				if(tableSelection.getChildren().size() > 1){
@@ -88,27 +94,7 @@ public class DBMSFrontEnd extends Application{
 					tableSelection.getChildren().remove(1);
 				}
 				
-				
-				String queryThis;
-				if(chooseTable.getValue().equals("Internal Storage")){
-					queryThis = "SELECT * FROM Memory_InternalStorage";
-				}
-				else if(chooseTable.getValue().equals("Launch Time")){
-					queryThis = "SELECT * FROM LaunchInformation";
-				}
-				else if(chooseTable.getValue().equals("Video")){
-					queryThis = "SELECT * FROM Camera_Video";
-				}
-				else if(chooseTable.getValue().equals("Color")){
-					queryThis = "SELECT * FROM Frame_Color";
-				}
-				else{
-					queryThis = "SELECT * FROM " + chooseTable.getValue();
-				}
-				
-				stmt = connection.prepareStatement(queryThis);
-				ResultSet res = stmt.executeQuery();
-				ResultSetMetaData resmd = res.getMetaData();
+				ResultSetMetaData resmd = executeQuery(chooseTable.getValue(), null).getMetaData();
 				
 				ObservableList<String> chooseFrom = FXCollections.observableArrayList();
 				for(int i = 1; i <= resmd.getColumnCount(); i++){
@@ -121,7 +107,7 @@ public class DBMSFrontEnd extends Application{
 				
 				Button addToQueryList = new Button("Add");
 				addToQueryList.setOnAction(event->{
-					if(addToQueryList != null){
+					if(secondaryBox.getValue() != null){
 						addToQuery(chooseTable.getValue(), secondaryBox.getValue());
 						tableSelection.getChildren().remove(2);
 						tableSelection.getChildren().remove(1);
@@ -146,22 +132,26 @@ public class DBMSFrontEnd extends Application{
 		
 	}
 	
-	public ResultSet executeQuery(String tableName) throws SQLException{
+	public ResultSet executeQuery(String tableName, String attribute) throws SQLException{
+		if(attribute == null){
+			attribute = "*";
+		}
+		
 		String queryThis;
 		if(tableName.equals("Internal Storage")){
-			queryThis = "SELECT * FROM Memory_InternalStorage";
+			queryThis = "SELECT " + attribute + " FROM Memory_InternalStorage";
 		}
 		else if(tableName.equals("Launch Time")){
-			queryThis = "SELECT * FROM LaunchInformation";
+			queryThis = "SELECT " + attribute + " FROM LaunchInformation";
 		}
 		else if(tableName.equals("Video")){
-			queryThis = "SELECT * FROM Camera_Video";
+			queryThis = "SELECT " + attribute + " FROM Camera_Video";
 		}
 		else if(tableName.equals("Color")){
-			queryThis = "SELECT * FROM Frame_Color";
+			queryThis = "SELECT " + attribute + " FROM Frame_Color";
 		}
 		else{
-			queryThis = "SELECT * FROM " + tableName;
+			queryThis = "SELECT " + attribute + " FROM " + tableName;
 		}
 		
 		stmt = connection.prepareStatement(queryThis);
