@@ -185,7 +185,8 @@ public class DBMSFrontEnd extends Application{
 					
 					String attributeText = "";
 					for(int i = attributeInfo.indexOf("New Attribute Information - " + tableName + ": " + attribute) + 1; 
-							(i < attributeInfo.size()) && !attributeInfo.get(i).contains("New Attribute Information"); i++){
+							(i < attributeInfo.size()) && !attributeInfo.get(i).contains("New Attribute Information"); 
+							i++){
 						attributeText = attributeText.concat(attributeInfo.get(i).concat("\n"));
 					}
 					
