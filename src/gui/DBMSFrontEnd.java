@@ -123,8 +123,17 @@ public class DBMSFrontEnd extends Application{
 				ComboBox<String> secondaryBox = new ComboBox<>(chooseFrom);
 				
 				Button addToQueryList = new Button("Add");
-				addToQueryList.setOnAction(event->{
-					if(secondaryBox.getValue() != null){
+				addToQueryList.setOnAction(e1->{
+					if(queryingOptions.getChildren().size() > 1){
+						for(int i = 1; i < queryingOptions.getChildren().size(); i++){
+							if(((Text)((VBox) queryingOptions.getChildren().get(i)).getChildren().get(
+									0)).getText().contains(secondaryBox.getValue())){
+								 return;
+							}
+						}
+					}
+					
+					if(secondaryBox.getValue() != null && queryingOptions.getChildren().size() < 7){
 						addToQuery(chooseTable.getValue(), secondaryBox.getValue());
 					}
 				});
