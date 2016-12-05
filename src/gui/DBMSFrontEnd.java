@@ -11,24 +11,35 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.BackgroundImage;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 public class DBMSFrontEnd extends Application{
 	private Scene scene;
@@ -39,11 +50,14 @@ public class DBMSFrontEnd extends Application{
 	private TextFlow infoSection;
 	private ArrayList<String> attributeInfo;
 	private String[][] resultsQuery;
+	private Timeline timeline;
 	
 	private static final String DB_PATH = DBMSFrontEnd.class.getResource("PhoneDatabase.sqlite").toString();
 	
 	public DBMSFrontEnd() throws SQLException{
 		pane = new Pane();
+		pane.setBackground(new Background(new BackgroundFill(Color.WHITE, null, null)));
+		
 		scene = new Scene(pane, 1200, 900);
 		
 		infoSection = new TextFlow();
@@ -64,7 +78,7 @@ public class DBMSFrontEnd extends Application{
 	
 	@Override
 	public void start(Stage primaryStage){
-		queryingScreen();
+		firstStartingScreen();
 		
 		primaryStage.setTitle("Test");
 		primaryStage.setScene(scene);
@@ -80,6 +94,80 @@ public class DBMSFrontEnd extends Application{
 		});
 	}
 
+	public void firstStartingScreen(){
+		firstStartingScreenTimeline();
+		timeline.play();
+	}
+	
+	public void firstStartingScreenTimeline(){
+		Text firstStartingScreenText = new Text(300, 500, "Hello");
+		firstStartingScreenText.setFont(Font.font(null, FontWeight.BOLD, 250));
+		firstStartingScreenText.setOpacity(0);
+		
+		TextFlow secondStartingScreenText = new TextFlow();
+		secondStartingScreenText.getChildren().addAll(new Text("Welcome\n"), new Text("   to the phone\n      database"));
+		((Text)secondStartingScreenText.getChildren().get(0)).setFont(Font.font(null, FontWeight.BOLD, 250));
+		((Text)secondStartingScreenText.getChildren().get(1)).setFont(Font.font(null, FontWeight.BOLD, 150));
+		
+		secondStartingScreenText.setLayoutX(45);
+		secondStartingScreenText.setLayoutY(50);
+		secondStartingScreenText.setOpacity(0);
+		
+		EventHandler<ActionEvent> sayHello = new EventHandler<ActionEvent>(){
+			String currentText = "First/FadeIn";
+			int delay = 0;
+			
+			@Override
+			public void handle(ActionEvent e) {
+				if(currentText.equals("First/FadeIn")){
+					firstStartingScreenText.setOpacity(firstStartingScreenText.getOpacity() + 0.004);
+					if(firstStartingScreenText.getOpacity() >= 1){
+						currentText = "First/Delay";
+					}
+				}
+				else if(currentText.equals("First/Delay")){
+					delay++;
+					if(delay == 60){
+						currentText = "First/FadeAway";
+						delay = 0;
+					}
+				}
+				else if(currentText.equals("First/FadeAway")){
+					firstStartingScreenText.setOpacity(firstStartingScreenText.getOpacity() - 0.004);
+					if(firstStartingScreenText.getOpacity() <= .2){
+						currentText = "Second/FadeIn";
+					}
+				}
+				else if(currentText.equals("Second/FadeIn")){
+					firstStartingScreenText.setOpacity(firstStartingScreenText.getOpacity() - 0.004);
+					secondStartingScreenText.setOpacity(secondStartingScreenText.getOpacity() + 0.004);
+					if(secondStartingScreenText.getOpacity() >= 1){
+						currentText = "Second/Delay";
+					}
+				}
+				else if(currentText.equals("Second/Delay")){
+					delay++;
+					if(delay == 60){
+						currentText = "Second/FadeAway";
+					}
+				}
+				else if(currentText.equals("Second/FadeAway")){
+					secondStartingScreenText.setOpacity(secondStartingScreenText.getOpacity() - 0.004);
+					if(secondStartingScreenText.getOpacity() <= 0){
+						pane.getChildren().clear();
+						queryingScreen();
+						timeline.stop();
+					}
+				}
+			}
+			
+		};
+		
+		pane.getChildren().addAll(firstStartingScreenText, secondStartingScreenText);
+		timeline = new Timeline(new KeyFrame(Duration.millis(1000/60.0), sayHello));
+		timeline.setCycleCount(Timeline.INDEFINITE);
+	}
+	
 	public void queryingScreen(){
 		Button getResults = new Button("Find Me A Phone");
 		getResults.setLayoutX(535);
@@ -151,12 +239,18 @@ public class DBMSFrontEnd extends Application{
 		});
 		
 		getResults.setOnAction(e->{
+/*			for(int i = 1; i < queryingOptions.getChildren().size(); i++){
+				if(((ComboBox<String>)((HBox)((VBox)queryingOptions.getChildren().get(i)).getChildren().get(1)).getChildren().get(0)).getValue() == null){
+					return;
+				}
+			}
+*/			
 			if(queryingOptions.getChildren().size() > 1){
 				try {
+					pane.getChildren().clear();
 					displayResultsScreen();
 					infoSection.getChildren().clear();
 					queryingOptions.getChildren().clear();
-					pane.getChildren().clear();
 				} catch (SQLException e1) {
 					e1.printStackTrace();
 				}			
@@ -292,7 +386,7 @@ public class DBMSFrontEnd extends Application{
 					i)).getChildren().get(0)).getChildren().get(1)).getText();
 			
 			if(tableAndAtt.substring(0, tableAndAtt.indexOf(",")).contains("Carrier")){
-				select = select + "CarrierSellsPhones.CarrierName ";
+				select = select + "CarrierSellsPhones";
 				
 				if(!from.contains("CarrierSellsPhones")){
 					from = from + " INNER JOIN CarrierSellsPhones ON CarrierSellsPhones.PhoneName = Phone.PhoneName";
@@ -389,12 +483,20 @@ public class DBMSFrontEnd extends Application{
 	public void displayResultsScreen() throws SQLException{
 		ResultSet res = getResults();
 		
-		while(res.next()){
-			for(int i = 0; i < queryingOptions.getChildren().size(); i++){
-				System.out.print(res.getString(i + 1) + ", ");
-			}
-			System.out.println("");
-		}
+		Button previous = new Button("<");
+		previous.setLayoutX(563);
+		previous.setLayoutY(720);
+		
+		Button next = new Button(">");
+		next.setLayoutX(600);
+		next.setLayoutY(720);
+		
+		
+		Button newQuery = new Button("New Search");
+		newQuery.setLayoutX(550);
+		newQuery.setLayoutY(760);
+		
+		pane.getChildren().addAll(previous, next, newQuery);
 	}
 	
 	public static void main(String args[]){
