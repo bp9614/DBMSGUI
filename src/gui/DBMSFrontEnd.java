@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
@@ -33,6 +34,7 @@ import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
@@ -50,7 +52,8 @@ public class DBMSFrontEnd extends Application{
 	private TextFlow infoSection;
 	private ArrayList<String> attributeInfo;
 	private String[][] resultsQuery;
-	private Timeline timeline;
+	private Timeline welcomeScreenTimeLine, backwardsTimeline, forwardTimeline;
+	private ArrayList<TextFlow> listOfPhoneInformation;
 	
 	private static final String DB_PATH = DBMSFrontEnd.class.getResource("PhoneDatabase.sqlite").toString();
 	
@@ -71,9 +74,14 @@ public class DBMSFrontEnd extends Application{
 		attributeInfo = new ArrayList<>();
 		storeAttributeInformation();
 		
+		listOfPhoneInformation = new ArrayList<>();
+		
 		resultsQuery = new String[6][2];
 		
 		connection = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
+		
+//		forwardTimeline();
+//		backwardsTimeline();
 	}
 	
 	@Override
@@ -96,7 +104,7 @@ public class DBMSFrontEnd extends Application{
 
 	public void firstStartingScreen(){
 		firstStartingScreenTimeline();
-		timeline.play();
+		welcomeScreenTimeLine.play();
 	}
 	
 	public void firstStartingScreenTimeline(){
@@ -105,9 +113,10 @@ public class DBMSFrontEnd extends Application{
 		firstStartingScreenText.setOpacity(0);
 		
 		TextFlow secondStartingScreenText = new TextFlow();
-		secondStartingScreenText.getChildren().addAll(new Text("Welcome\n"), new Text("   to the phone\n      database"));
+		secondStartingScreenText.getChildren().addAll(new Text("Welcome\n"), new Text("  to the phone\n     database"));
 		((Text)secondStartingScreenText.getChildren().get(0)).setFont(Font.font(null, FontWeight.BOLD, 250));
 		((Text)secondStartingScreenText.getChildren().get(1)).setFont(Font.font(null, FontWeight.BOLD, 150));
+		((Text)secondStartingScreenText.getChildren().get(1)).setX(20);
 		
 		secondStartingScreenText.setLayoutX(45);
 		secondStartingScreenText.setLayoutY(50);
@@ -120,7 +129,7 @@ public class DBMSFrontEnd extends Application{
 			@Override
 			public void handle(ActionEvent e) {
 				if(currentText.equals("First/FadeIn")){
-					firstStartingScreenText.setOpacity(firstStartingScreenText.getOpacity() + 0.004);
+					firstStartingScreenText.setOpacity(firstStartingScreenText.getOpacity() + 0.006);
 					if(firstStartingScreenText.getOpacity() >= 1){
 						currentText = "First/Delay";
 					}
@@ -133,14 +142,14 @@ public class DBMSFrontEnd extends Application{
 					}
 				}
 				else if(currentText.equals("First/FadeAway")){
-					firstStartingScreenText.setOpacity(firstStartingScreenText.getOpacity() - 0.004);
+					firstStartingScreenText.setOpacity(firstStartingScreenText.getOpacity() - 0.006);
 					if(firstStartingScreenText.getOpacity() <= .2){
 						currentText = "Second/FadeIn";
 					}
 				}
 				else if(currentText.equals("Second/FadeIn")){
-					firstStartingScreenText.setOpacity(firstStartingScreenText.getOpacity() - 0.004);
-					secondStartingScreenText.setOpacity(secondStartingScreenText.getOpacity() + 0.004);
+					firstStartingScreenText.setOpacity(firstStartingScreenText.getOpacity() - 0.006);
+					secondStartingScreenText.setOpacity(secondStartingScreenText.getOpacity() + 0.006);
 					if(secondStartingScreenText.getOpacity() >= 1){
 						currentText = "Second/Delay";
 					}
@@ -152,11 +161,11 @@ public class DBMSFrontEnd extends Application{
 					}
 				}
 				else if(currentText.equals("Second/FadeAway")){
-					secondStartingScreenText.setOpacity(secondStartingScreenText.getOpacity() - 0.004);
+					secondStartingScreenText.setOpacity(secondStartingScreenText.getOpacity() - 0.006);
 					if(secondStartingScreenText.getOpacity() <= 0){
 						pane.getChildren().clear();
 						queryingScreen();
-						timeline.stop();
+						welcomeScreenTimeLine.stop();
 					}
 				}
 			}
@@ -164,8 +173,8 @@ public class DBMSFrontEnd extends Application{
 		};
 		
 		pane.getChildren().addAll(firstStartingScreenText, secondStartingScreenText);
-		timeline = new Timeline(new KeyFrame(Duration.millis(1000/60.0), sayHello));
-		timeline.setCycleCount(Timeline.INDEFINITE);
+		welcomeScreenTimeLine = new Timeline(new KeyFrame(Duration.millis(1000/60.0), sayHello));
+		welcomeScreenTimeLine.setCycleCount(Timeline.INDEFINITE);
 	}
 	
 	public void queryingScreen(){
@@ -481,7 +490,12 @@ public class DBMSFrontEnd extends Application{
 	}
 	
 	public void displayResultsScreen() throws SQLException{
-		ResultSet res = getResults();
+		ResultSet res = getResults();		
+		
+		Rectangle grayBackground = new Rectangle(200, 60, 800, 640);
+		grayBackground.setFill(Color.GRAY);
+		grayBackground.setArcHeight(10);
+		grayBackground.setArcWidth(10);
 		
 		Button previous = new Button("<");
 		previous.setLayoutX(563);
@@ -491,14 +505,159 @@ public class DBMSFrontEnd extends Application{
 		next.setLayoutX(600);
 		next.setLayoutY(720);
 		
-		
 		Button newQuery = new Button("New Search");
 		newQuery.setLayoutX(550);
 		newQuery.setLayoutY(760);
 		
-		pane.getChildren().addAll(previous, next, newQuery);
+		pane.getChildren().addAll(grayBackground, previous, next, newQuery);
+		
+		for(int numberOfResults = 0; res.next(); numberOfResults++){
+			createPhoneInfo(res.getString("PhoneName"), numberOfResults);
+		}
+		
+		if(!listOfPhoneInformation.isEmpty()){
+			pane.getChildren().add(listOfPhoneInformation.get(0));
+		}
+		
+		previous.setOnAction(e->{
+/*			if(forwardTimeline.getStatus().equals(Animation.Status.STOPPED) 
+					&& backwardsTimeline.getStatus().equals(Animation.Status.STOPPED)){
+				backwardsTimeline.play();
+			}
+*/
+			if(!listOfPhoneInformation.isEmpty()){
+				if(!pane.getChildren().contains(listOfPhoneInformation.get(0))){
+					pane.getChildren().add(listOfPhoneInformation.get(listOfPhoneInformation.indexOf(
+							pane.getChildren().remove(pane.getChildren().size() - 1)) - 1));
+				}
+			}
+		});
+		
+		next.setOnAction(e->{
+/*			if(forwardTimeline.getStatus().equals(Animation.Status.STOPPED) 
+					&& backwardsTimeline.getStatus().equals(Animation.Status.STOPPED)){
+				forwardTimeline.play();
+			}
+*/
+			if(!listOfPhoneInformation.isEmpty()){
+				if(!pane.getChildren().contains(listOfPhoneInformation.get(listOfPhoneInformation.size() - 1))){
+					pane.getChildren().add(listOfPhoneInformation.get(listOfPhoneInformation.indexOf(
+							pane.getChildren().remove(pane.getChildren().size() - 1)) + 1));
+				}
+			}
+		});
+		
+		newQuery.setOnAction(e->{
+			pane.getChildren().clear();
+			queryingScreen();
+			listOfPhoneInformation.clear();
+		});
 	}
 	
+	public void createPhoneInfo(String phoneName, int numberOfResults) throws SQLException{
+		String queryToScreen = "SELECT Phone.Brand, CarrierSellsPhones.CarrierName, Frame.Weight, Frame.Height, "
+				+ "Frame.Width, Frame.Length, Platform.OS, Display.DisplaySize, Display.DisplayResolution, "
+				+ "Features.WaterResistance, Features.FingerPrint, Features.RemovableBattery "
+				+ "FROM Phone INNER JOIN CarrierSellsPhones On Phone.PhoneName = CarrierSellsPhones.PhoneName "
+				+ "INNER JOIN Frame ON Frame.PhoneName = Phone.PhoneName INNER JOIN Platform ON "
+				+ "Platform.PhoneName = Phone.PhoneName INNER JOIN Display ON Display.PhoneName = Phone.PhoneName "
+				+ "INNER JOIN Features ON Features.PhoneName = Phone.PhoneName "
+				+ "WHERE Phone.PhoneName = '" + phoneName + "'";
+		
+		stmt = connection.prepareStatement(queryToScreen);
+		ResultSet res = stmt.executeQuery();
+		
+		stmt.clearBatch();
+		
+		res.next();
+		
+		TextFlow phoneInformation = new TextFlow();
+		phoneInformation.setLayoutX(240);
+		phoneInformation.setLayoutY(90);
+		phoneInformation.getChildren().addAll(new Text("Phone Name: " + phoneName + "\n\n"), 
+				new Text("Brand: " + res.getString("Brand") + "\n\n"), new Text("Carrier: " + res.getString("CarrierName") + ", "), 
+				new Text("Weight: " + res.getString("Weight") + "\n\n"), 
+				new Text("Height x Width x Length: " + res.getString("Height") + " x " + res.getString("Weight") + " x " + res.getString("Length") + " in\n\n"),
+				new Text("OS: " + res.getString("OS") + "\n\n"), new Text("Display Size: " + res.getString("DisplaySize") + "\n\n"), 
+				new Text("Resolution: " + res.getString("DisplayResolution") + "\n\n"), 
+				new Text("Water Resistance: " + res.getString("WaterResistance") + "\n\n"), 
+				new Text("Finger Print Scanner: " + res.getString("FingerPrint") + "\n\n"), 
+				new Text("Removable Battery: " + res.getString("FingerPrint")));
+		
+		while(res.next()){
+			((Text)phoneInformation.getChildren().get(2)).setText(
+					((Text)phoneInformation.getChildren().get(2)).getText() 
+					+ res.getString("CarrierName") + ", ");
+		}
+		
+		((Text)phoneInformation.getChildren().get(2)).setText(
+				((Text)phoneInformation.getChildren().get(2)).getText().substring(
+				0, ((Text)phoneInformation.getChildren().get(2)).getText().lastIndexOf(",")) + "\n\n");
+		
+		for(int i = 0; i < phoneInformation.getChildren().size(); i++){
+			((Text)phoneInformation.getChildren().get(i)).setFont(new Font(20));
+		}
+			
+//		pane.getChildren().add(phoneInformation);
+		listOfPhoneInformation.add(phoneInformation);
+	}
+	
+/*	public void forwardTimeline(){
+		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>(){
+			int repeat = 0;
+			@Override
+			public void handle(ActionEvent arg0) {
+				repeat++;
+				if(repeat != 100){
+					if(!listOfPhoneInformation.isEmpty()){
+						if(listOfPhoneInformation.get(listOfPhoneInformation.size() - 1).getLayoutX() != 240){
+							for(int i = 0; i < listOfPhoneInformation.size(); i++){
+								listOfPhoneInformation.get(i).setLayoutX(
+										listOfPhoneInformation.get(i).getLayoutX() - 10);
+							}
+						}
+					}
+				}
+				else{
+					forwardTimeline.stop();
+					repeat = 0;
+				}
+			}
+			
+		};
+		
+		forwardTimeline = new Timeline(new KeyFrame(Duration.millis(1000/60.0), event));
+		forwardTimeline.setCycleCount(Timeline.INDEFINITE);
+	}
+	
+	public void backwardsTimeline(){
+		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>(){
+			int repeat = 0;
+			@Override
+			public void handle(ActionEvent arg0) {
+				repeat++;
+				if(repeat != 100){
+					if(!listOfPhoneInformation.isEmpty()){
+						if(listOfPhoneInformation.get(0).getLayoutX() != 240){
+							for(int i = 0; i < listOfPhoneInformation.size(); i++){
+								listOfPhoneInformation.get(i).setLayoutX(
+										listOfPhoneInformation.get(i).getLayoutX() + 10);
+							}
+						}
+					}
+				}
+				else{
+					backwardsTimeline.stop();
+					repeat = 0;
+				}
+			}
+			
+		};
+		
+		backwardsTimeline = new Timeline(new KeyFrame(Duration.millis(1000/60.0), event));
+		backwardsTimeline.setCycleCount(Timeline.INDEFINITE);
+	}
+*/	
 	public static void main(String args[]){
 		launch(args);
 	}
