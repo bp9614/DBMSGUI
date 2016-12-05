@@ -38,6 +38,7 @@ public class DBMSFrontEnd extends Application{
 	private VBox queryingOptions;
 	private TextFlow infoSection;
 	private ArrayList<String> attributeInfo;
+	private String[][] resultsQuery;
 	
 	private static final String DB_PATH = DBMSFrontEnd.class.getResource("PhoneDatabase.sqlite").toString();
 	
@@ -55,6 +56,8 @@ public class DBMSFrontEnd extends Application{
 		
 		attributeInfo = new ArrayList<>();
 		storeAttributeInformation();
+		
+		resultsQuery = new String[6][2];
 		
 		connection = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
 	}
@@ -126,8 +129,9 @@ public class DBMSFrontEnd extends Application{
 				addToQueryList.setOnAction(e1->{
 					if(queryingOptions.getChildren().size() > 1){
 						for(int i = 1; i < queryingOptions.getChildren().size(); i++){
-							if(((Text)((VBox) queryingOptions.getChildren().get(i)).getChildren().get(
-									0)).getText().contains(secondaryBox.getValue())){
+							if(((Text)((TextFlow)((VBox) queryingOptions.getChildren().get(i)).getChildren(
+									).get(0)).getChildren().get(0)).getText().contains(
+									secondaryBox.getValue())){
 								 return;
 							}
 						}
@@ -147,24 +151,36 @@ public class DBMSFrontEnd extends Application{
 		});
 		
 		getResults.setOnAction(e->{
-			infoSection.getChildren().clear();
-			queryingOptions.getChildren().clear();
-			pane.getChildren().clear();
+			if(queryingOptions.getChildren().size() > 1){
+				try {
+					displayResultsScreen();
+					infoSection.getChildren().clear();
+					queryingOptions.getChildren().clear();
+					pane.getChildren().clear();
+				} catch (SQLException e1) {
+					e1.printStackTrace();
+				}			
+			}
 		});
 	}
 	
 	public void addToQuery(String tableName, String attribute) {		
-		try {
+		try {			
 			VBox attributeSelectionAndTitle = new VBox(15);
 			
-			Text attributeSelectionTitle = new Text(attribute + " of a phone");
+			TextFlow attributeSelectionTitle = new TextFlow();
+			attributeSelectionTitle.getChildren().addAll(new Text(attribute + " of a phone "),
+					new Text(tableName + "," + attribute));
+			attributeSelectionTitle.getChildren().get(1).setOpacity(0);
+			
 			HBox attributeSelection = new HBox(10);
 			
 			
 			ResultSet res = executeQuery(tableName, attribute);
 			ObservableList<String> attributeList = FXCollections.observableArrayList();
 			while(res.next()){
-				if(res.getString(attribute) != null && !attributeList.contains(res.getString(attribute))){
+				if(res.getString(attribute) != null && !attributeList.contains(res.getString(attribute))
+						&& !res.getString(attribute).contains("NULL")){
 					if(attribute.equals("Price")){
 						if((res.getString(attribute).indexOf(".")) == (res.getString(attribute).length() - 2)){
 								attributeList.add("$" + res.getString(attribute) + "0");
@@ -264,6 +280,121 @@ public class DBMSFrontEnd extends Application{
 		stmt.clearBatch();
 		
 		return res;
+	}
+	
+	public ResultSet getResults() throws SQLException{
+		String select = "SELECT Phone.PhoneName, ";
+		String from = "FROM Phone";
+		String where = "WHERE ";
+		
+		for(int i = 1; i < queryingOptions.getChildren().size(); i++){
+			String tableAndAtt = ((Text)((TextFlow)((VBox)queryingOptions.getChildren().get(
+					i)).getChildren().get(0)).getChildren().get(1)).getText();
+			
+			if(tableAndAtt.substring(0, tableAndAtt.indexOf(",")).contains("Carrier")){
+				select = select + "CarrierSellsPhones.CarrierName ";
+				
+				if(!from.contains("CarrierSellsPhones")){
+					from = from + " INNER JOIN CarrierSellsPhones ON CarrierSellsPhones.PhoneName = Phone.PhoneName";
+				}
+			}
+			else{
+				if(tableAndAtt.substring(0, tableAndAtt.indexOf(",")).contains("Color")){
+					select = select + "Frame_Color";
+					
+					if(!from.contains(" Frame ")){
+						from = from + " INNER JOIN Frame ON Frame.PhoneName = Phone.PhoneName";
+					}
+					
+					if(!from.contains("Frame_Color")){
+						from = from + " INNER JOIN Frame_Color ON Frame_Color.FrameID = Frame.FrameID";
+					}
+				}
+				else if(tableAndAtt.substring(0, tableAndAtt.indexOf(",")).contains("Video")){
+					select = select + "Camera_Video";
+					
+					if(!from.contains(" Camera ")){
+						from = from + " INNER JOIN Camera ON Camera.PhoneName = Phone.PhoneName";
+					}
+					
+					if(!from.contains("Camera_Video")){
+						from = from + " INNER JOIN Camera_Video ON Camera_Video.CameraID"
+								+ " = Camera.CameraID";
+					}
+				}
+				else if(tableAndAtt.substring(0, tableAndAtt.indexOf(",")).contains("InternalStorage")){
+					select = select + "Memory_InternalStorage";
+					
+					if(!from.contains(" Memory ")){
+						from = from + " INNER JOIN Memory ON Memory.PhoneName = Phone.PhoneName";
+					}
+					
+					if(!from.contains("Memory_InternalStorage")){
+						from = from + " INNER JOIN Memory_InternalStorage ON Memory_InternalStorage.MemoryID"
+								+ " = Memory.MemoryID";
+					}
+				}
+				else if(tableAndAtt.substring(0, tableAndAtt.indexOf(",")).contains("Launch")){
+					select = select + "LaunchInformation";
+					
+					if(!from.contains("LaunchInformation")){
+						from = from + " INNER JOIN LaunchInformation ON LaunchInformation.PhoneName = Phone.PhoneName";
+					}
+				}
+				else{
+					select = select + tableAndAtt.substring(0, tableAndAtt.indexOf(","));
+					
+					if(!from.contains(tableAndAtt.substring(0, tableAndAtt.indexOf(",")))){
+						from = from + " INNER JOIN " + tableAndAtt.substring(0, tableAndAtt.indexOf(",")) 
+							+ " ON " + tableAndAtt.substring(0, tableAndAtt.indexOf(",")) 
+							+ ".PhoneName = Phone.PhoneName";
+					}
+				}
+			}
+			
+			select = select + "." + tableAndAtt.substring(tableAndAtt.indexOf(",") + 1);
+			where = where + tableAndAtt.substring(tableAndAtt.indexOf(",") + 1) + " = '" 
+					+ ((ComboBox<String>)((HBox)((VBox)queryingOptions.getChildren().get(
+					i)).getChildren().get(1)).getChildren().get(0)).getValue() + "'";
+			
+			if((i + 1) < queryingOptions.getChildren().size()){
+				select = select + ", ";
+				where = where + " AND ";
+			}
+		}
+		
+		if(select.lastIndexOf(",") != -1 && select.substring(select.lastIndexOf(",")).equals(", ")){
+			select = select.substring(0, select.lastIndexOf(","));
+		}
+		
+		if(where.lastIndexOf("AND ") != -1 && where.substring(where.lastIndexOf("AND ")).equals("AND ")){
+			where = where.substring(0, where.lastIndexOf("AND "));
+		}
+		
+		String queryThis = select + " " + from;
+		if(!where.equals("WHERE ")){
+			queryThis = queryThis + " " + where;
+		}
+		
+		System.out.println(queryThis);
+		
+		stmt = connection.prepareStatement(queryThis);
+		ResultSet res = stmt.executeQuery();
+		
+		stmt.clearBatch();
+		
+		return res;
+	}
+	
+	public void displayResultsScreen() throws SQLException{
+		ResultSet res = getResults();
+		
+		while(res.next()){
+			for(int i = 0; i < queryingOptions.getChildren().size(); i++){
+				System.out.print(res.getString(i + 1) + ", ");
+			}
+			System.out.println("");
+		}
 	}
 	
 	public static void main(String args[]){
