@@ -88,7 +88,7 @@ public class DBMSFrontEnd extends Application{
 	public void start(Stage primaryStage){
 		firstStartingScreen();
 		
-		primaryStage.setTitle("Test");
+		primaryStage.setTitle("Phone Database");
 		primaryStage.setScene(scene);
 		primaryStage.show();
 		
@@ -97,9 +97,10 @@ public class DBMSFrontEnd extends Application{
 		primaryStage.setMaxWidth(1210);
 		primaryStage.setMaxWidth(1210);
 		
-		scene.setOnMouseClicked(e->{
+/*		scene.setOnMouseClicked(e->{
 			System.out.println("X: " + e.getX() + ", Y: " + e.getY());
 		});
+*/
 	}
 
 	public void firstStartingScreen(){
@@ -479,7 +480,7 @@ public class DBMSFrontEnd extends Application{
 			queryThis = queryThis + " " + where;
 		}
 		
-		System.out.println(queryThis);
+//		System.out.println(queryThis);
 		
 		stmt = connection.prepareStatement(queryThis);
 		ResultSet res = stmt.executeQuery();
@@ -493,7 +494,8 @@ public class DBMSFrontEnd extends Application{
 		ResultSet res = getResults();		
 		
 		Rectangle grayBackground = new Rectangle(200, 60, 800, 640);
-		grayBackground.setFill(Color.GRAY);
+		grayBackground.setFill(Color.LIGHTGRAY);
+		grayBackground.setOpacity(0.8);
 		grayBackground.setArcHeight(10);
 		grayBackground.setArcWidth(10);
 		
@@ -520,11 +522,6 @@ public class DBMSFrontEnd extends Application{
 		}
 		
 		previous.setOnAction(e->{
-/*			if(forwardTimeline.getStatus().equals(Animation.Status.STOPPED) 
-					&& backwardsTimeline.getStatus().equals(Animation.Status.STOPPED)){
-				backwardsTimeline.play();
-			}
-*/
 			if(!listOfPhoneInformation.isEmpty()){
 				if(!pane.getChildren().contains(listOfPhoneInformation.get(0))){
 					pane.getChildren().add(listOfPhoneInformation.get(listOfPhoneInformation.indexOf(
@@ -534,11 +531,6 @@ public class DBMSFrontEnd extends Application{
 		});
 		
 		next.setOnAction(e->{
-/*			if(forwardTimeline.getStatus().equals(Animation.Status.STOPPED) 
-					&& backwardsTimeline.getStatus().equals(Animation.Status.STOPPED)){
-				forwardTimeline.play();
-			}
-*/
 			if(!listOfPhoneInformation.isEmpty()){
 				if(!pane.getChildren().contains(listOfPhoneInformation.get(listOfPhoneInformation.size() - 1))){
 					pane.getChildren().add(listOfPhoneInformation.get(listOfPhoneInformation.indexOf(
@@ -595,69 +587,12 @@ public class DBMSFrontEnd extends Application{
 				0, ((Text)phoneInformation.getChildren().get(2)).getText().lastIndexOf(",")) + "\n\n");
 		
 		for(int i = 0; i < phoneInformation.getChildren().size(); i++){
-			((Text)phoneInformation.getChildren().get(i)).setFont(new Font(20));
+			((Text)phoneInformation.getChildren().get(i)).setFont(Font.font(null, FontWeight.BOLD, 20));
 		}
-			
-//		pane.getChildren().add(phoneInformation);
+		
 		listOfPhoneInformation.add(phoneInformation);
 	}
 	
-/*	public void forwardTimeline(){
-		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>(){
-			int repeat = 0;
-			@Override
-			public void handle(ActionEvent arg0) {
-				repeat++;
-				if(repeat != 100){
-					if(!listOfPhoneInformation.isEmpty()){
-						if(listOfPhoneInformation.get(listOfPhoneInformation.size() - 1).getLayoutX() != 240){
-							for(int i = 0; i < listOfPhoneInformation.size(); i++){
-								listOfPhoneInformation.get(i).setLayoutX(
-										listOfPhoneInformation.get(i).getLayoutX() - 10);
-							}
-						}
-					}
-				}
-				else{
-					forwardTimeline.stop();
-					repeat = 0;
-				}
-			}
-			
-		};
-		
-		forwardTimeline = new Timeline(new KeyFrame(Duration.millis(1000/60.0), event));
-		forwardTimeline.setCycleCount(Timeline.INDEFINITE);
-	}
-	
-	public void backwardsTimeline(){
-		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>(){
-			int repeat = 0;
-			@Override
-			public void handle(ActionEvent arg0) {
-				repeat++;
-				if(repeat != 100){
-					if(!listOfPhoneInformation.isEmpty()){
-						if(listOfPhoneInformation.get(0).getLayoutX() != 240){
-							for(int i = 0; i < listOfPhoneInformation.size(); i++){
-								listOfPhoneInformation.get(i).setLayoutX(
-										listOfPhoneInformation.get(i).getLayoutX() + 10);
-							}
-						}
-					}
-				}
-				else{
-					backwardsTimeline.stop();
-					repeat = 0;
-				}
-			}
-			
-		};
-		
-		backwardsTimeline = new Timeline(new KeyFrame(Duration.millis(1000/60.0), event));
-		backwardsTimeline.setCycleCount(Timeline.INDEFINITE);
-	}
-*/	
 	public static void main(String args[]){
 		launch(args);
 	}
